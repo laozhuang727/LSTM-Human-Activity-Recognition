@@ -1,2 +1,5 @@
 .ipynb_checkpoints
 
+/data/UCI HAR Dataset/*
+/data/__MACOSX
+/data/UCI HAR Dataset.zip

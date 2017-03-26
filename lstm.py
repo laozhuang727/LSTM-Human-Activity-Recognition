@@ -22,7 +22,7 @@ def load_X(X_signals_paths):
     X_signals = []
 
     for signal_type_path in X_signals_paths:
-        file = open(signal_type_path, 'rb')
+        file = open(signal_type_path, 'r')
         # Read dataset from disk, dealing with text files' syntax
         X_signals.append(
             [np.array(serie, dtype=np.float32) for serie in [
@@ -37,7 +37,7 @@ def load_X(X_signals_paths):
 # Load "y" (the neural network's training and testing outputs)
 
 def load_y(y_path):
-    file = open(y_path, 'rb')
+    file = open(y_path, 'r')
     # Read dataset from disk, dealing with text file's syntax
     y_ = np.array(
         [elem for elem in [
@@ -107,17 +107,17 @@ def LSTM_Network(feature_mat, config):
     # New feature_mat (hidden) shape: [time_steps*batch_size, n_hidden]
 
     # Split the series because the rnn cell needs time_steps features, each of shape:
-    hidden = tf.split(0, config.n_steps, hidden)
+    hidden = tf.split(hidden, config.n_steps, 0)
     # New hidden's shape: a list of lenght "time_step" containing tensors of shape [batch_size, n_hidden]
 
     # Define LSTM cell of first hidden layer:
-    lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(config.n_hidden, forget_bias=1.0)
+    lstm_cell = tf.contrib.rnn.BasicLSTMCell(config.n_hidden, forget_bias=1.0)
 
     # Stack two LSTM layers, both layers has the same shape
-    lsmt_layers = tf.nn.rnn_cell.MultiRNNCell([lstm_cell] * 2)
+    lsmt_layers = tf.contrib.rnn.MultiRNNCell([lstm_cell] * 2)
 
     # Get LSTM outputs, the states are internal to the LSTM cells,they are not our attention here
-    outputs, _ = tf.nn.rnn(lsmt_layers, hidden, dtype=tf.float32)
+    outputs, _ = tf.contrib.rnn.static_rnn(lsmt_layers, hidden, dtype=tf.float32)
     # outputs' shape: a list of lenght "time_step" containing tensors of shape [batch_size, n_classes]
 
     # Get last time step's output feature for a "many to one" style classifier,
@@ -213,7 +213,7 @@ if __name__ == "__main__":
         sum(tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables())
     # Softmax loss and L2
     cost = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(pred_Y, Y)) + l2
+        tf.nn.softmax_cross_entropy_with_logits(logits=pred_Y, labels=Y)) + l2
     optimizer = tf.train.AdamOptimizer(
         learning_rate=config.learning_rate).minimize(cost)
 
